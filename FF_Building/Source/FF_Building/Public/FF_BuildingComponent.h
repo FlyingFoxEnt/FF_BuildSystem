@@ -1,0 +1,54 @@
+//Plugin provided by Flying Fox Ent.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Components/ActorComponent.h"
+#include "GameFramework/Character.h"
+#include "Camera/CameraComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "DrawDebugHelpers.h"
+#include "Engine/World.h"
+#include "Math/Vector.h"
+#include "Math/UnrealMathUtility.h"
+#include "Net/UnrealNetwork.h"
+#include "FF_BuildingComponent.generated.h"
+
+
+UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+class FF_BUILDING_API UFF_BuildingComponent : public UActorComponent
+{
+	GENERATED_BODY()
+
+public:	
+	// Sets default values for this component's properties
+	UFF_BuildingComponent();
+
+protected:
+	// Called when the game starts
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	UFUNCTION(BlueprintCallable, Category = "FF Building|Functions")
+	void SpawnBuilding(int BuildType,FTransform BuildTransfor);
+	
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSpawnBuilding(int BuildType, FTransform BuildTransfor);
+
+	UFUNCTION(BlueprintCallable, Category = "FF Building|Functions")
+	void UpdateSelectMesh(int MeshIndex);
+	
+	UFUNCTION(Server, Unreliable)
+	void SERVER_SelectMesh(int MeshIndex);
+	
+	UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "FF Building|Properties")
+	int SelectedMeshIndex = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FF Building|Properties")
+	TArray<UStaticMesh*> MeshArray;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+};
