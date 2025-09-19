@@ -31,11 +31,13 @@ void UFF_BuildingComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 	// ...
 }
 
-void UFF_BuildingComponent::SpawnBuilding(int BuildType, FTransform BuildTransfor)
+void UFF_BuildingComponent::SpawnBuilding(int BuildType)
 {
 	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
 
 	// If the character has a CameraComponent
+
+    UE_LOG(LogTemp, Log, TEXT("Client Trying to spawn building"));
 	if (UCameraComponent* Camera = OwnerCharacter->FindComponentByClass<UCameraComponent>())
 	{
 		UE_LOG(LogTemp, Log, TEXT("Camera found: %s"), *Camera->GetName());
@@ -61,10 +63,12 @@ void UFF_BuildingComponent::SpawnBuilding(int BuildType, FTransform BuildTransfo
                 UE_LOG(LogTemp, Log, TEXT("Hit: %s"), *HitResult.GetActor()->GetName());
 
                 FVector SnappedLocation = FVector(
-                    FMath::GridSnap(HitResult.Location.X, 100.f),
-                    FMath::GridSnap(HitResult.Location.Y, 100.f),
-                    FMath::GridSnap(HitResult.Location.Z, 100.f)
+                    FMath::GridSnap(HitResult.Location.X, 200.f),
+                    FMath::GridSnap(HitResult.Location.Y, 200.f),
+                    FMath::GridSnap(HitResult.Location.Z, 200.f)
                 );
+
+				ServerSpawnBuilding(SelectedMeshIndex, FTransform(FRotator::ZeroRotator, SnappedLocation));
             }
 
 	}
@@ -73,6 +77,14 @@ void UFF_BuildingComponent::SpawnBuilding(int BuildType, FTransform BuildTransfo
 void UFF_BuildingComponent::UpdateSelectMesh(int MeshIndex)
 {
     SERVER_SelectMesh(MeshIndex);
+}
+
+void UFF_BuildingComponent::RotateMesh(FRotator Rotation)
+{
+    if(CurrentRotation.Yaw + Rotation.Yaw > 360.f)
+        CurrentRotation = FRotator(0.f, 0.f, 0.f);
+	else
+	CurrentRotation += Rotation;
 }
 
 void UFF_BuildingComponent::SERVER_SelectMesh_Implementation(int MeshIndex)
@@ -90,9 +102,31 @@ bool UFF_BuildingComponent::ServerSpawnBuilding_Validate(int BuildType, FTransfo
     return true;
 }
 
-void UFF_BuildingComponent::ServerSpawnBuilding_Implementation(int BuildType, FTransform BuildTransfor)
+void UFF_BuildingComponent::ServerSpawnBuilding_Implementation(int BuildType, FTransform BuildTransform)
 {
+    if (!GetOwner() || !GetWorld())
+    {
+        return;
+    }
+
+    if (BuildingClass)
+    {
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.Owner = GetOwner();
+        SpawnParams.Instigator = Cast<APawn>(GetOwner());
+
+        // Spawn on the server
+        AFF_BuildingActor* NewBuilding = GetWorld()->SpawnActor<AFF_BuildingActor>(BuildingClass, BuildTransform, SpawnParams);
+
+        if (NewBuilding)
+        {
+            UE_LOG(LogTemp, Log, TEXT("Spawned building"));
+            UE_LOG(LogTemp, Log, TEXT("Building Type: %i"), SelectedMeshIndex);
+            NewBuilding->SERVER_SetBuildType(SelectedMeshIndex);
+        }
+    }
 }
+
 
 void UFF_BuildingComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

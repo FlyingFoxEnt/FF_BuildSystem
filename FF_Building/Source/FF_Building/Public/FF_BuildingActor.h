@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/Actor.h"
-#include "FF_BuildingComponent.h"
 #include "FF_MeshBuildingInterface.h"
 #include "FF_BuildingActor.generated.h"
 
@@ -38,6 +37,8 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation, Category="Building Mesh Functions")
 	void SERVER_SetBuildType(int BuildTypeIndex);
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FF Building|Properties")
+	TArray<UStaticMesh*> MeshArray;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

@@ -12,6 +12,7 @@
 #include "Math/Vector.h"
 #include "Math/UnrealMathUtility.h"
 #include "Net/UnrealNetwork.h"
+#include "FF_BuildingActor.h"
 #include "FF_BuildingComponent.generated.h"
 
 
@@ -33,7 +34,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable, Category = "FF Building|Functions")
-	void SpawnBuilding(int BuildType,FTransform BuildTransfor);
+	void SpawnBuilding(int BuildType);
 	
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSpawnBuilding(int BuildType, FTransform BuildTransfor);
@@ -41,6 +42,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "FF Building|Functions")
 	void UpdateSelectMesh(int MeshIndex);
 	
+	UFUNCTION(BlueprintCallable, Category = "FF Building|Functions")
+	void RotateMesh(FRotator Rotation);
+
 	UFUNCTION(Server, Unreliable)
 	void SERVER_SelectMesh(int MeshIndex);
 	
@@ -48,7 +52,10 @@ public:
 	int SelectedMeshIndex = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FF Building|Properties")
-	TArray<UStaticMesh*> MeshArray;
+	FRotator CurrentRotation;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "FF Building|Properties")
+	TSubclassOf<AFF_BuildingActor> BuildingClass;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

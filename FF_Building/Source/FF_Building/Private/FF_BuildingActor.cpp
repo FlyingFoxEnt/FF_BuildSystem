@@ -9,14 +9,17 @@ AFF_BuildingActor::AFF_BuildingActor()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	bReplicates = true;
-	Scene = CreateDefaultSubobject<USceneComponent>("Root Component");
-	SM_Mesh = CreateDefaultSubobject<UStaticMeshComponent>("SM_Mesh");
-	RootComponent = Scene;
+	bReplicates = true;  
+	SetNetUpdateFrequency(15.f);
+		SetMinNetUpdateFrequency(2.f);
 
+	Scene = CreateDefaultSubobject<USceneComponent>("RootComponent");
+	RootComponent = Scene;
 	Scene->SetMobility(EComponentMobility::Movable);
 
+	SM_Mesh = CreateDefaultSubobject<UStaticMeshComponent>("SM_Mesh");
 	SM_Mesh->SetupAttachment(Scene);
+	SM_Mesh->SetIsReplicated(true);
 }
 
 // Called when the game starts or when spawned
@@ -35,9 +38,10 @@ void AFF_BuildingActor::Tick(float DeltaTime)
 
 void AFF_BuildingActor::SERVER_SetBuildType_Implementation(int BuildTypeIndex)
 {
-	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
-
-	OwnerCharacter->FindComponentByClass<UFF_BuildingComponent>()->SelectedMeshIndex = BuildTypeIndex;
+	if (MeshArray.IsValidIndex(BuildTypeIndex))
+	{
+		SM_Mesh->SetStaticMesh(MeshArray[BuildTypeIndex]);
+	}
 }
 
 bool AFF_BuildingActor::SERVER_SetBuildType_Validate(int BuildTypeIndex)
