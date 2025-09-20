@@ -19,7 +19,8 @@ void UFF_BuildingComponent::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
-	
+    OwnerCharacter = Cast<ACharacter>(GetOwner());
+    Camera = OwnerCharacter->FindComponentByClass<UCameraComponent>();
 }
 
 
@@ -28,17 +29,16 @@ void UFF_BuildingComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// ...
+    UpdateGhostMesh();
 }
 
 void UFF_BuildingComponent::SpawnBuilding(int BuildType)
 {
-	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
 
 	// If the character has a CameraComponent
 
     UE_LOG(LogTemp, Log, TEXT("Client Trying to spawn building"));
-	if (UCameraComponent* Camera = OwnerCharacter->FindComponentByClass<UCameraComponent>())
+	if (Camera)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Camera found: %s"), *Camera->GetName());
 		// Store it if you need later
@@ -68,16 +68,13 @@ void UFF_BuildingComponent::SpawnBuilding(int BuildType)
                     FMath::GridSnap(HitResult.Location.Z, 200.f)
                 );
 
-				ServerSpawnBuilding(SelectedMeshIndex, FTransform(FRotator::ZeroRotator, SnappedLocation));
+				ServerSpawnBuilding(SelectedMeshIndex, FTransform(CurrentRotation, SnappedLocation));
             }
 
 	}
 }
 
-void UFF_BuildingComponent::UpdateSelectMesh(int MeshIndex)
-{
-    SERVER_SelectMesh(MeshIndex);
-}
+
 
 void UFF_BuildingComponent::RotateMesh(FRotator Rotation)
 {
@@ -85,6 +82,44 @@ void UFF_BuildingComponent::RotateMesh(FRotator Rotation)
         CurrentRotation = FRotator(0.f, 0.f, 0.f);
 	else
 	CurrentRotation += Rotation;
+}
+
+void UFF_BuildingComponent::UpdateGhostMesh()
+{
+
+}
+
+void UFF_BuildingComponent::DestroyMesh()
+{
+    FVector Start = Camera->GetComponentLocation();
+    FVector ForwardVector = Camera->GetForwardVector();
+    FVector End = Start + (ForwardVector * 1000.f); // 1000 units forward
+
+    FHitResult HitResult;
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(OwnerCharacter); // Ignore self
+
+    bool bHit = GetWorld()->LineTraceSingleByChannel(
+        HitResult,
+        Start,
+        End,
+        ECC_Visibility,  // Trace channel (can use custom)
+        Params
+    );
+
+    if (bHit)
+    {
+        IFF_MeshBuildingInterface* MeshInterface = Cast<IFF_MeshBuildingInterface>(HitResult.GetActor());
+        if (MeshInterface)
+        {
+            MeshInterface->DestroyBuild();
+        }
+    }
+}
+
+void UFF_BuildingComponent::UpdateSelectMesh(int MeshIndex)
+{
+    SERVER_SelectMesh(MeshIndex);
 }
 
 void UFF_BuildingComponent::SERVER_SelectMesh_Implementation(int MeshIndex)
@@ -97,19 +132,20 @@ void UFF_BuildingComponent::SERVER_SelectMesh_Implementation(int MeshIndex)
         SelectedMeshIndex = FMath::Clamp(MeshIndex + SelectedMeshIndex, 0, 6);
 }
 
-bool UFF_BuildingComponent::ServerSpawnBuilding_Validate(int BuildType, FTransform BuildTransfor)
-{
-    return true;
-}
-
 void UFF_BuildingComponent::ServerSpawnBuilding_Implementation(int BuildType, FTransform BuildTransform)
 {
     if (!GetOwner() || !GetWorld())
     {
         return;
     }
+    TArray<AActor*> BuildingActorsArray;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AFF_BuildingActor::StaticClass(), BuildingActorsArray);
+	float MinDistance;
+	FVector ActorLocation = GetOwner()->GetActorLocation();
+	AActor* NearestBuilding = UGameplayStatics::FindNearestActor(GetOwner()->GetActorLocation(), BuildingActorsArray, MinDistance);
 
-    if (BuildingClass)
+
+    if (BuildingClass && MinDistance > 150.0f)
     {
         FActorSpawnParameters SpawnParams;
         SpawnParams.Owner = GetOwner();
@@ -124,6 +160,10 @@ void UFF_BuildingComponent::ServerSpawnBuilding_Implementation(int BuildType, FT
             UE_LOG(LogTemp, Log, TEXT("Building Type: %i"), SelectedMeshIndex);
             NewBuilding->SERVER_SetBuildType(SelectedMeshIndex);
         }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Log, TEXT("Client can't spawn Mesh here."));
     }
 }
 

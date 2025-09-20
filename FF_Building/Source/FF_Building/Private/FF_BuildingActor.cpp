@@ -36,6 +36,19 @@ void AFF_BuildingActor::Tick(float DeltaTime)
 
 }
 
+void AFF_BuildingActor::DestroyBuild()
+{
+	UE_LOG(LogTemp, Log, TEXT("CLIENT : Destroy Mesh"));
+	SERVER_DestroyBuild();
+	Destroy();
+}
+
+void AFF_BuildingActor::SERVER_DestroyBuild_Implementation()
+{
+	Destroy();
+	UE_LOG(LogTemp, Log, TEXT("SERVER : Destroy Mesh"));
+}
+
 void AFF_BuildingActor::SERVER_SetBuildType_Implementation(int BuildTypeIndex)
 {
 	if (MeshArray.IsValidIndex(BuildTypeIndex))

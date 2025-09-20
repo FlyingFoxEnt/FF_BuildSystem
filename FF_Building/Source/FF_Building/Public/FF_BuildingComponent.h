@@ -3,16 +3,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
-#include "GameFramework/Character.h"
+#include "Math/Vector.h"
+#include "Engine/World.h"
+#include "FF_GhostMesh.h"
+#include "FF_BuildingActor.h"
+#include "DrawDebugHelpers.h"
+#include "Net/UnrealNetwork.h"
+#include "Math/UnrealMathUtility.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "DrawDebugHelpers.h"
-#include "Engine/World.h"
-#include "Math/Vector.h"
-#include "Math/UnrealMathUtility.h"
-#include "Net/UnrealNetwork.h"
-#include "FF_BuildingActor.h"
+#include "GameFramework/Character.h"
+#include "FF_MeshBuildingInterface.h"
+#include "Components/ActorComponent.h"
 #include "FF_BuildingComponent.generated.h"
 
 
@@ -36,7 +38,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "FF Building|Functions")
 	void SpawnBuilding(int BuildType);
 	
-	UFUNCTION(Server, Reliable, WithValidation)
+	UFUNCTION(Server, Reliable)
 	void ServerSpawnBuilding(int BuildType, FTransform BuildTransfor);
 
 	UFUNCTION(BlueprintCallable, Category = "FF Building|Functions")
@@ -47,7 +49,17 @@ public:
 
 	UFUNCTION(Server, Unreliable)
 	void SERVER_SelectMesh(int MeshIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "FF Building|Function")
+	void UpdateGhostMesh();
+
+	UFUNCTION(BlueprintCallable, Category = "FF Building|Function")
+	void DestroyMesh();
 	
+	ACharacter* OwnerCharacter;
+
+	UCameraComponent* Camera;
+
 	UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "FF Building|Properties")
 	int SelectedMeshIndex = 0;
 

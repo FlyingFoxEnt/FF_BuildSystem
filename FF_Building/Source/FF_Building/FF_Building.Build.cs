@@ -22,13 +22,18 @@ public class FF_Building : ModuleRules
 			);
 			
 		
+		
 		PublicDependencyModuleNames.AddRange(
 			new string[]
-			{
-				"Core",
-				// ... add other public dependencies that you statically link with here ...
-			}
+			 {
+				 "Core", 
+				 "CoreUObject", 
+				 "Engine", 
+				 "InputCore"
+				// "Interfaces" 
+			 }
 			);
+
 			
 		
 		PrivateDependencyModuleNames.AddRange(

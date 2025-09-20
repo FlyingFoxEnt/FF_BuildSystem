@@ -9,7 +9,7 @@
 #include "FF_BuildingActor.generated.h"
 
 UCLASS()
-class FF_BUILDING_API AFF_BuildingActor : public AActor
+class FF_BUILDING_API AFF_BuildingActor : public AActor, public IFF_MeshBuildingInterface
 {
 	GENERATED_BODY()
 	
@@ -25,6 +25,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	virtual void DestroyBuild() override;
+
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Build Mesh Properties")
 	class USceneComponent* Scene;
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Build Mesh Properties")
@@ -36,6 +38,9 @@ public:
 
 	UFUNCTION(Server, Reliable, WithValidation, Category="Building Mesh Functions")
 	void SERVER_SetBuildType(int BuildTypeIndex);
+
+	UFUNCTION(Server, Reliable, Category = "Building Mesh Functions")
+	void SERVER_DestroyBuild();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FF Building|Properties")
 	TArray<UStaticMesh*> MeshArray;
