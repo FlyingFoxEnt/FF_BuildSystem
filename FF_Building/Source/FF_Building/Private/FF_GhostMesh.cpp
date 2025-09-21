@@ -15,7 +15,13 @@ AFF_GhostMesh::AFF_GhostMesh()
 
 	SM_Mesh = CreateDefaultSubobject<UStaticMeshComponent>("SM_Mesh");
 	SM_Mesh->SetupAttachment(Scene);
+	SM_Mesh->SetOnlyOwnerSee(true);
 	SM_Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void AFF_GhostMesh::updateGhostMesh(UStaticMesh* NewMesh)
+{
+	SM_Mesh->GetStaticMesh() != NewMesh ? SM_Mesh->SetStaticMesh(NewMesh) : NULL;
 }
 
 // Called when the game starts or when spawned

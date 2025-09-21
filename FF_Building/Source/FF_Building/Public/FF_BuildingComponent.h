@@ -50,6 +50,9 @@ public:
 	UFUNCTION(Server, Unreliable)
 	void SERVER_SelectMesh(int MeshIndex);
 
+	UFUNCTION()
+	void SpawnGhostActor();
+
 	UFUNCTION(BlueprintCallable, Category = "FF Building|Function")
 	void UpdateGhostMesh();
 
@@ -59,6 +62,8 @@ public:
 	ACharacter* OwnerCharacter;
 
 	UCameraComponent* Camera;
+
+	AFF_GhostMesh* GhostActor;
 
 	UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "FF Building|Properties")
 	int SelectedMeshIndex = 0;

@@ -20,6 +20,9 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Build Mesh Properties")
 	class UStaticMeshComponent* SM_Mesh;
 
+	UFUNCTION(BlueprintCallable, Category = "FF Building|Functions")
+	void updateGhostMesh(UStaticMesh* NewMesh);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
