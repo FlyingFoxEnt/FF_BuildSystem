@@ -21,8 +21,6 @@ void UFF_BuildingComponent::BeginPlay()
 	// ...
     OwnerCharacter = Cast<ACharacter>(GetOwner());
     Camera = OwnerCharacter->FindComponentByClass<UCameraComponent>();
-
-    //SpawnGhostActor();
 }
 
 
@@ -31,7 +29,14 @@ void UFF_BuildingComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-    UpdateGhostMesh();
+    if (GetOwner()->GetLocalRole() < ROLE_Authority) // ROLE_AutonomousProxy or ROLE_SimulatedProxy
+    {
+        //UpdateGhostMesh();
+    }
+    else
+    {
+        // We are on the server (authority)
+    }
 }
 
 void UFF_BuildingComponent::SpawnBuilding(int BuildType)
@@ -88,35 +93,11 @@ void UFF_BuildingComponent::RotateMesh(FRotator Rotation)
 
 void UFF_BuildingComponent::UpdateGhostMesh()
 {
-    FVector UStart = Camera->GetComponentLocation();
-    FVector UForwardVector = Camera->GetForwardVector();
-    FVector UEnd = UStart + (UForwardVector * 1000.f); // 1000 units forward
-
-    FHitResult UHitResult;
-    FCollisionQueryParams UParams;
-    UParams.AddIgnoredActor(OwnerCharacter); // Ignore self
-
-    bool bGhostHit = GetWorld()->LineTraceSingleByChannel(
-        UHitResult,
-        UStart,
-        UEnd,
-        ECC_Visibility,  // Trace channel (can use custom)
-        UParams
-    );
-    /*
-    if (bGhostHit)
+    if (Camera == nullptr || OwnerCharacter == nullptr) 
     {
-        GhostActor->SetActorHiddenInGame(false);
-        GhostActor->SetActorEnableCollision(false);
-		const TArray<UStaticMesh*>& MeshArray = BuildingClass->GetDefaultObject<AFF_BuildingActor>()->MeshArray;
-        GhostActor->updateGhostMesh(MeshArray[SelectedMeshIndex]);
-
-    }else
-    {
-        GhostActor->SetActorHiddenInGame(true);
-        GhostActor->SetActorEnableCollision(false);
+        UE_LOG(LogTemp, Log, TEXT("Ghost Not Valid can't update"));
+        //return;
     }
-    */
 }
 
 void UFF_BuildingComponent::DestroyMesh()
@@ -194,32 +175,6 @@ void UFF_BuildingComponent::ServerSpawnBuilding_Implementation(int BuildType, FT
     else
     {
         UE_LOG(LogTemp, Log, TEXT("Client can't spawn Mesh here."));
-    }
-}
-
-
-void UFF_BuildingComponent::SpawnGhostActor()
-{
-    if (!GetWorld()) return;
-
-    FVector SpawnLocation = GetOwner()->GetActorLocation() + FVector(200, 0, 0);
-    FRotator SpawnRotation = FRotator::ZeroRotator;
-
-    FActorSpawnParameters SpawnParams;
-    SpawnParams.Owner = GetOwner();      // make the component's owner the owner of the new actor
-    SpawnParams.Instigator = GetOwner()->GetInstigator();
-    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-    GhostActor = GetWorld()->SpawnActor<AFF_GhostMesh>(
-        AFF_GhostMesh::StaticClass(),
-        SpawnLocation,
-        SpawnRotation,
-        SpawnParams
-    );
-
-    if (GhostActor)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Spawned actor: %s"), *GhostActor->GetName());
     }
 }
 

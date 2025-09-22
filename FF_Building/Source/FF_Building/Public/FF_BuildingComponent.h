@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "Math/Vector.h"
 #include "Engine/World.h"
-#include "FF_GhostMesh.h"
 #include "FF_BuildingActor.h"
 #include "DrawDebugHelpers.h"
 #include "Net/UnrealNetwork.h"
@@ -15,6 +14,7 @@
 #include "GameFramework/Character.h"
 #include "FF_MeshBuildingInterface.h"
 #include "Components/ActorComponent.h"
+//#include "Components/StaticMeshComponent.h"
 #include "FF_BuildingComponent.generated.h"
 
 
@@ -50,9 +50,6 @@ public:
 	UFUNCTION(Server, Unreliable)
 	void SERVER_SelectMesh(int MeshIndex);
 
-	UFUNCTION()
-	void SpawnGhostActor();
-
 	UFUNCTION(BlueprintCallable, Category = "FF Building|Function")
 	void UpdateGhostMesh();
 
@@ -62,8 +59,11 @@ public:
 	ACharacter* OwnerCharacter;
 
 	UCameraComponent* Camera;
-
-	AFF_GhostMesh* GhostActor;
+	
+	/*
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "FF Building|Component")
+	UStaticMeshComponent* GhostMesh;
+	*/
 
 	UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly, Category = "FF Building|Properties")
 	int SelectedMeshIndex = 0;
